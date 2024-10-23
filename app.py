@@ -1,20 +1,44 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from collections import Counter
 
 app = FastAPI()
 
+# User click history mock data
 user_clicks = {
-    "user_123": ["tech", "landscaping", "landscaping", "landscaping", "tech", "sports", "sports", "gaming"],
-    "user_456": ["tech", "sports", "gaming"],
+    "user_123": ["cooking", "home_cleaning", "laundry", "grocery_shopping", "management_tasks"],
+    "user_456": ["cooking", "school_work", "grocery_shopping"],
 }
 
+# Updated category recommendations
 category_recommendations = {
-    "cooking": ["baking", "kitchen gadgets", "cooking classes", "healthy recipes"],
-    "landscaping": ["gardening", "outdoor tools", "landscape design"],
-    "tech": ["smartphones", "laptops", "tech accessories"],
-    "sports": ["fitness equipment", "running gear", "sports apparel"],
-    "gaming": ["consoles", "PC games", "gaming accessories"]
+    "cooking": [
+        "Home Style Cooking",
+        "Specialty Cooking",
+        "Baking and Pastry"
+    ],
+    "home_cleaning": [
+        "Regular House Cleaning",
+        "Deep Cleaning"
+    ],
+    "grocery_shopping": [
+        "Light Purchasing",
+        "Bulk Purchasing"
+    ],
+    "laundry": [
+        "Dry Cleaning",
+        "Wash and Hang to Dry",
+        "Laundry Pick up"
+    ],
+    "management_tasks": [
+        "Schedule Management",
+        "Task Delegation",
+        "Budgeting"
+    ],
+    "school_work": [
+        "Homework Assistance",
+        "Study Sessions"
+    ]
 }
 
 class ClickData(BaseModel):
@@ -42,23 +66,32 @@ async def update_clicks(click_data: ClickData):
     return {"status": "success", "message": f"Click recorded for {clicked_category}"}
 
 @app.get("/get-recommendations/{user_id}")
-async def get_recommendations(user_id: str):
+async def get_recommendations(user_id: str, window_size: int = 5):
     if user_id not in user_clicks:
         return {"status": "error", "message": "User not found"}
 
-    category_counts = Counter(user_clicks[user_id])
+    user_click_history = user_clicks[user_id]
+    recent_clicks = user_click_history[-window_size:]
+
+    category_counts = Counter(recent_clicks)
     most_common_categories = category_counts.most_common(3)
 
     recommendations = {}
     for category, _ in most_common_categories:
-        recommendations_for_category = category_recommendations.get(category, [])
-        if recommendations_for_category:
-            recommendations[category] = recommendations_for_category
-        else:
-            recommendations[category] = ["No recommendations available"]
+        recommendations[category] = category_recommendations.get(category, [])
 
     return {
         "status": "success",
         "most_common_categories": [category for category, _ in most_common_categories],
-        "recommendations": recommendations
+        "recommendations": recommendations,
+        "recent_clicks": recent_clicks
     }
+
+@app.delete("/reset-clicks/{user_id}")
+async def reset_clicks(user_id: str):
+    if user_id in user_clicks:
+        del user_clicks[user_id]  # Remove the user's click history
+        return {"status": "success", "message": f"Click history for {user_id} has been reset."}
+    else:
+        raise HTTPException(status_code=404, detail="User not found")
+
