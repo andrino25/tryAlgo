@@ -61,7 +61,7 @@ async def update_clicks(click_data: ClickData):
 
     user_clicks[user_id].append(clicked_category)
 
-    print(f"Updated click history for {user_id}: {user_clicks[user_id]}")
+    print(f"Updated click history for the {user_id}: {user_clicks[user_id]}")
 
     return {"status": "success", "message": f"Click recorded for {clicked_category}"}
 
