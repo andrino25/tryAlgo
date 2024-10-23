@@ -1,0 +1,28 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+
+# Log files
+*.log
+
+# Python dependency files
+*.env
+*.DS_Store
+
+# IDE-specific files (PyCharm)
+.idea/
+.vscode/
+
+# Pip dependency file
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Cache
+.cache/
+*.egg-info/
+.eggs/
